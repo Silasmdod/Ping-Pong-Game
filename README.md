@@ -2,8 +2,6 @@
 Autor: Silas Matheus
 Data:13/08/2024
 
-Aplicação de projeto em JavaScript, HTML5 e API Canvas.
+Projeto em JavaScript, HTML5 e canvas
 
-Aplicação para desenvolvimento pessoal, aprimoramento de programação POO lógica e processo de ações em JavaScript
-
-Aplicação em: Um jogo de Ping-Pong, utilizando Canvas para ilustração e aplicação de ação e JavaScript lógica 
+O Objetivo deste projeto é mostrar os conhecimentos adquiridos em ação e melhoria do desenvolvimento pessoal em lógica POO e conhecimentos gerais das API's dos programas.

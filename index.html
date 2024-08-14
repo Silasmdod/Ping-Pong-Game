@@ -12,7 +12,7 @@
     3-E incluir sons
     4-Um de musiquinha
     5-também dos toques da bola na superfície lateral
-    6- os tóques na raquete,
+    6- os toques na raquete,
     7- De quando um ponto é feito
     8- e da mudança do placar
     9- o jogo acaba no terceiro ponto e ao fazer o terceiro ponto,
@@ -60,8 +60,6 @@
             width: 300px;
         }
 
-   
-
         #popup button {
             display: block;
             width: 100%;
@@ -71,8 +69,8 @@
             border-radius: 5px;
             background-color: #555;
             color: white;
-
             cursor: pointer;
+            font-family: "Press Start 2P", system-ui;
         }
 
         #popup button:hover {
@@ -107,6 +105,46 @@
             display: block;
             background-color: #286047;
         }
+
+        /* Estilo para o popup de fim de jogo */
+        #end-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #end-popup-content {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+        }
+
+        #end-popup button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+            font-family: "Press Start 2P", system-ui;
+        }
+
+        #end-popup button:hover {
+            background-color: #777;
+        }
     </style>
 </head>
 <body>
@@ -124,16 +162,25 @@
         </div>
     </div>
 
+    <!-- Popup de fim de jogo -->
+    <div id="end-popup">
+        <div id="end-popup-content">
+            <h2>Fim de Jogo</h2>
+            <p id="final-message"></p>
+            <button id="play-again-btn">Jogar Novamente</button>
+            <button id="quit-btn">Sair</button>
+        </div>
+    </div>
+
     <canvas></canvas>
     <script>
         // Criando a ação do lembrete piscar
         const lembrete = document.getElementById('lembrete');
-
-        // Criando a variável do intervalo do lembrete
         let lembreteInterval;
 
-        // Variável que armazena o estado de pausa
+        // Variáveis que armazenam o estado de pausa e se o jogo acabou
         let isPaused = false;
+        let isGameOver = false;
 
         const canvasEl = document.querySelector("canvas"),
               canvasCtx = canvasEl.getContext("2d"),
@@ -244,115 +291,149 @@
                 }
 
                 // Verifica as laterais superior e inferior do campo
-                if ((this.y - this.r < 0 && this.directionY < 0) ||
-                    (this.y > field.h - this.r && this.directionY > 0)) {
-                    // Rebate a bola invertendo o sinal do eixo y
+                if (this.y + this.r > field.h || this.y - this.r < 0) {
                     this._reverseY();
                 }
+
+                this.x += this.directionX * this.speed;
+                this.y += this.directionY * this.speed;
             },
             _reverseX: function() {
                 this.directionX *= -1;
             },
             _reverseY: function() {
-                // 1 * -1 = -1
-                // -1 * -1 = 1
                 this.directionY *= -1;
             },
-            _speedUp: function() {
-                this.speed += 2;
-            },
             _pointUp: function() {
-                this._speedUp();
+                // Se um dos jogadores atingir 3 pontos, termina o jogo
+                if (score.human >= 3 || score.computer >= 3) {
+                    isGameOver = true;
+                    displayEndPopup(score.human >= 3 ? 'Você venceu!' : 'Você perdeu!');
+                } else {
+                    this.reset();
+                }
+            },
+            reset: function() {
                 this.x = field.w / 2;
                 this.y = field.h / 2;
-                this.directionX = -this.directionX;
-                this.directionY = -this.directionY;
+                this.directionX = Math.random() > 0.5 ? 1 : -1;
+                this.directionY = Math.random() > 0.5 ? 1 : -1;
             },
             draw: function() {
-                // Desenhando a bola
                 canvasCtx.beginPath();
-                canvasCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                canvasCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2, false);
                 canvasCtx.fillStyle = "#ffffff";
                 canvasCtx.fill();
                 canvasCtx.closePath();
                 this._calcPosition();
-                this.x += this.speed * this.directionX;
-                this.y += this.speed * this.directionY;
             }
         };
 
-        // Objeto Pontuação
+        // Objeto Placar
         const score = {
             human: 0,
             computer: 0,
-            draw: function() {
-                // Desenhando a pontuação
-                canvasCtx.fillStyle = "#ffffff";
-                canvasCtx.font = "30px Arial";
-                canvasCtx.textAlign = "center";
-                canvasCtx.textBaseline = "middle";
-                canvasCtx.fillText(this.human, field.w / 2 - 50, 30);
-                canvasCtx.fillText(this.computer, field.w / 2 + 50, 30);
-            },
             increaseHuman: function() {
                 this.human++;
             },
             increaseComputer: function() {
                 this.computer++;
+            },
+            draw: function() {
+                canvasCtx.font = "48px 'Press Start 2P'";
+                canvasCtx.fillStyle = "#ffffff";
+                canvasCtx.textAlign = "center";
+                canvasCtx.fillText(this.human, field.w / 4, 50);
+                canvasCtx.fillText(this.computer, 3 * field.w / 4, 50);
             }
         };
 
-        // Inicializando o jogo
-        function init() {
+        // Função de desenhar o campo
+        function draw() {
+            field.draw();
+            line.draw();
+            leftPaddle.draw();
+            rightPaddle.draw();
+            ball.draw();
+            score.draw();
+        }
+
+        // Função de atualizar o jogo
+        function update() {
+            if (!isPaused && !isGameOver) {
+                draw();
+                requestAnimationFrame(update);
+            }
+        }
+
+        // Função para iniciar o jogo
+        function startGame() {
+            isPaused = false;
+            isGameOver = false;
             canvasEl.width = field.w;
             canvasEl.height = field.h;
-            document.addEventListener("mousemove", function(e) {
-                mouse.x = e.clientX;
-                mouse.y = e.clientY;
-            });
-
-            document.addEventListener("keydown", function(e) {
-                if (e.code === "Space") {
-                    togglePause();
-                }
-            });
-
-            document.getElementById("restart-btn").addEventListener("click", function() {
-                location.reload();
-            });
-
-            document.getElementById("github-btn").addEventListener("click", function() {
-                window.open("https://github.com/Silasmdod/Ping-Pong-Game.git", "_blank");
-            });
-
-            document.getElementById("linkedin-btn").addEventListener("click", function() {
-                window.open("https://www.linkedin.com/in/silas-matheus-28495b1b2/", "_blank");
-            });
-
-            requestAnimationFrame(gameLoop);
+            update();
         }
 
-        function gameLoop() {
-            if (!isPaused) {
-                canvasCtx.clearRect(0, 0, field.w, field.h);
-                field.draw();
-                line.draw();
-                leftPaddle.draw();
-                rightPaddle.draw();
-                ball.draw();
-                score.draw();
-                document.getElementById('blurred').style.filter = 'none'; // Remove o desfoque quando não está pausado
+        // Função para mostrar o popup de fim de jogo
+        function displayEndPopup(message) {
+            const endPopup = document.getElementById('end-popup');
+            const finalMessage = document.getElementById('final-message');
+            finalMessage.textContent = message;
+            endPopup.style.display = 'flex';
+        }
+
+        // Função para reiniciar o jogo
+        function restartGame() {
+            score.human = 0;
+            score.computer = 0;
+            ball.reset();
+            startGame();
+        }
+
+        // Adicionando os eventos de controle
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') { // Espaço para pausar
+                isPaused = !isPaused;
+                document.getElementById('popup').style.display = isPaused ? 'flex' : 'none';
+                document.getElementById('blurred').style.filter = isPaused ? 'blur(4px)' : 'none';
+                if (!isPaused) update();
             }
-            requestAnimationFrame(gameLoop);
-        }
+        });
 
-        function togglePause() {
-            isPaused = !isPaused;
-            document.getElementById('popup').style.display = isPaused ? 'flex' : 'none';
-            document.getElementById('blurred').style.filter = isPaused ? 'blur(5px)' : 'none';
-        }
+        // Eventos dos botões do popup
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            isPaused = false;
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('blurred').style.filter = 'none';
+            restartGame();
+        });
 
-        init();
+        document.getElementById('github-btn').addEventListener('click', () => {
+            window.open('https://github.com/seu-repositorio', '_blank');
+        });
+
+        document.getElementById('linkedin-btn').addEventListener('click', () => {
+            window.open('https://linkedin.com/in/seu-perfil', '_blank');
+        });
+
+        // Eventos dos botões do popup de fim de jogo
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            document.getElementById('end-popup').style.display = 'none';
+            restartGame();
+        });
+
+        document.getElementById('quit-btn').addEventListener('click', () => {
+            window.close();
+        });
+
+        // Iniciando o jogo
+        startGame();
     </script>
 </body>
 </html>

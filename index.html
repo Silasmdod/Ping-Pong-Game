@@ -161,6 +161,15 @@
         #end-popup button:hover {
             background-color: #777;
         }
+
+        /* Adaptação para dispositivos móveis */
+        @media (max-width: 768px) {
+            #lembrete {
+                font-size: 18px;
+                top: auto;
+                bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -422,6 +431,21 @@
             }
         });
 
+        // Adicionando eventos de toque para dispositivos móveis
+        document.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            mouse.x = touch.clientX;
+            mouse.y = touch.clientY;
+            leftPaddle.y = mouse.y - leftPaddle.h / 2; // Atualiza a posição da raquete esquerda
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            mouse.x = touch.clientX;
+            mouse.y = touch.clientY;
+            leftPaddle.y = mouse.y - leftPaddle.h / 2; // Atualiza a posição da raquete esquerda
+        });
+
         // Eventos dos botões do popup
         document.getElementById('restart-btn').addEventListener('click', () => {
             isPaused = false;
@@ -453,3 +477,4 @@
     </script>
 </body>
 </html>
+

@@ -25,8 +25,16 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
+    <!-- Importante colocar esse último de baixo senão, não vai aparecer o icone
+     no navegador-->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 
 
+    <!--web font-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
 
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -39,12 +47,45 @@
             margin: 0;
             padding: 0;
         }
+
+        #lembrete{
+            position: absolute;
+            top: 870px;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-family: "Press Start 2P", system-ui;
+            color: #cccccc; /* Corrigido a cor para não estar entre aspas */
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out; /* Corrigido a sintaxe do tempo de transição */
+        }
+
+        canvas{
+            display: block;
+            background-color: #286047;
+        }
+
+    
+
     </style>
 </head>
 <body>
+    <!--Criando um lembrete de pause-->
+    <div id="lembrete">Pressione "Espaço" para pausar</div>
+
     <canvas></canvas>
     <script>
-        const canvasEl = document.querySelector("canvas"), /* Criando os elementos da API e o contexto */
+        //criando a ação do lembrete piscar
+        const lembrete = document.getElementById('lembrete');
+
+        //criando a variável do intervalo do lembrete
+        let lembreteInterval;
+
+        //variável que armazena o estado de pausa.
+        let isPaused = false;
+
+        const canvasEl = document.querySelector("canvas"),
               canvasCtx = canvasEl.getContext("2d"),
               gapX = 10;
 
@@ -246,10 +287,49 @@
             );
         })();
 
-        function main() {
-            animateFrame(main);
-            draw();
+        //criando a função de piscar do lembrete
+        function toggleVisibility(){
+            if(!isPaused){
+                if(lembrete.style.opacity == 1){
+                    lembrete.style.opacity = 0;
+                } else {
+                    lembrete.style.opacity = 1;
+                }
+            }
         }
+
+        //criando o start para voltar a piscar
+        function startLembreteInterval(){
+            lembreteInterval = setInterval(toggleVisibility, 2000); 
+            // Corrigido para usar setInterval
+        }
+
+        //criando função de pausar o lembrete
+        function stopLembreteInterval(){
+            clearInterval(lembreteInterval);
+        }
+
+        startLembreteInterval();
+
+        function main() {
+            if(!isPaused){ //se está diferente de false ou seja true, desenhe
+                draw();
+            }
+            requestAnimationFrame(main);
+        }
+
+        //adicionando o evento do teclado para pausar ou continuar
+        window.addEventListener('keydown', function(event){
+            if (event.code === 'Space'){
+                //alternar entre pausar e continuar
+                isPaused = !isPaused;
+                if(isPaused){
+                    stopLembreteInterval();
+                } else {
+                    startLembreteInterval();
+                }
+            }
+        });
 
         setup();
         main();
